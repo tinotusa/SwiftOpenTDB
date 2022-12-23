@@ -16,14 +16,14 @@ public enum TriviaDifficulty: String, CaseIterable, Identifiable {
     
     /// A unique id.
     public var id: Self { self }
-//
-//    /// The title of the case.
-//    public var title: LocalizedStringKey {
-//        switch self {
-//        case .any: return LocalizedStringKey("Any")
-//        case .easy: return LocalizedStringKey("Easy")
-//        case .hard: return LocalizedStringKey("Hard")
-//        case .medium: return LocalizedStringKey("Medium")
-//        }
-//    }
+
+    /// The title of the case.
+    public var title: String {
+        switch self {
+        case .any: return "Any"
+        case .easy: return "Easy"
+        case .hard: return "Hard"
+        case .medium: return "Medium"
+        }
+    }
 }
