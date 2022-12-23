@@ -47,7 +47,9 @@ public struct Question: Codable, Hashable {
         let url = Bundle.main.url(forResource: "exampleQuestions", withExtension: "json")!
         do {
             let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode(QuestionsResponse.self, from: data).results
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode(QuestionsResponse.self, from: data).results
         } catch {
             fatalError("Failed to decode example questions json. \(error)")
         }
