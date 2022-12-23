@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum OpenTDBError: Error {
+public enum OpenTDBError: Error {
     case invalidURL
     case serverStatus(code: Int)
     case invalidAPIResponse(code: ResponseCode)

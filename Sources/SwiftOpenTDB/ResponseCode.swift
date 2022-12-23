@@ -8,7 +8,7 @@
 import Foundation
 
 /// Responses from the opentdb api.
-enum ResponseCode: Int, CustomStringConvertible {
+public enum ResponseCode: Int, CustomStringConvertible {
     /// Returned results successfully.
     case success = 0
     /// Could not return results. The API doesn't have enough questions for your query.
@@ -20,7 +20,7 @@ enum ResponseCode: Int, CustomStringConvertible {
     /// Session Token has returned all possible questions for the specified query. Resetting the Token is necessary.
     case tokenEmpty = 4
     
-    var description: String {
+    public var description: String {
         switch self {
         case .success:
             return "Returned results successfully."
