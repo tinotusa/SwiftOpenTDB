@@ -21,3 +21,22 @@ for question in questions {
     print(question.incorrectAnswers)
 }
 ```
+
+``` swift
+// getting a token
+
+let openTDB = OpenTDB.shared
+do {
+    try await openTDB.requestToken()
+} catch {
+    print("\(error.localizedDescription)")
+}
+
+// reset the current token.
+do {
+    try await openTDB.resetToken()
+} catch {
+    print("Failed to reset token: \(error.localizedDescription)")
+}
+
+```
