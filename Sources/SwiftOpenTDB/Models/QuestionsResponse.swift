@@ -8,9 +8,9 @@
 import Foundation
 
 /// Model for opentdb's questions
-struct QuestionsResponse: Codable {
+public struct QuestionsResponse: Codable {
     /// The response code.
-    let responseCode: Int
+    public let responseCode: Int
     /// The questions and answers.
-    let results: [Question]
+    public let results: [Question]
 }
