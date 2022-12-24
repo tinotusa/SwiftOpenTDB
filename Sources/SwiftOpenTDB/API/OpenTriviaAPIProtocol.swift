@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  OpenTriviaAPIProtocol.swift
 //  
 //
 //  Created by Tino on 24/12/2022.
