@@ -63,16 +63,12 @@ public extension OpenTDB {
             throw OpenTDBError.invalidParameter
         case .tokenNotFound:
             log.debug("Failed to get questions. No token found. Will try to request for a new token.")
-            try await requestToken()
-            return try await getQuestions()
+            throw OpenTDBError.noSessionToken
         case .tokenEmpty:
-            if self.sessionToken != nil && questionsResponse.results.isEmpty {
-                log.error("No results found. Might have seen all questions.")
-                throw OpenTDBError.seenAllQuestions
-            }
-            try await resetToken()
-            return try await getQuestions()
+            log.debug("Token is empty.")
+            throw OpenTDBError.emptyToken
         default:
+            log.debug("Unknown response code \(responseCode.rawValue).")
             break
         }
         
@@ -84,7 +80,7 @@ public extension OpenTDB {
     func resetToken() async throws {
         if sessionToken == nil {
             log.error("Failed to reset the token. The token is nil.")
-            throw OpenTDBError.noSessonToken
+            throw OpenTDBError.noSessionToken
         }
         let tokenResponse = try await openTDBAPI.resetToken(currentToken: self.sessionToken)
         self.sessionToken = tokenResponse.token
