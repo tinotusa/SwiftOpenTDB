@@ -2,43 +2,83 @@ import XCTest
 @testable import SwiftOpenTDB
 
 final class OpenTDBTests: XCTestCase {
-    var openTDB = OpenTDB.shared
+    var mockOpenTriviaAPI: MockOpenTriviaAPI!
+    var openTDB: OpenTDB!
     
     override func setUpWithError() throws {
-        
+        mockOpenTriviaAPI = MockOpenTriviaAPI()
+        openTDB = .init(fetcher: mockOpenTriviaAPI)
     }
     
-    func testURLCreation() async throws {
-        let triviaConfig = TriviaConfig(
-            numberOfQuestions: 10,
-            category: .animals,
-            difficulty: .easy,
-            triviaType: .any
-        )
-        let urlQueryItems: [URLQueryItem] = [
-            .init(name: "amount", value: "\(triviaConfig.numberOfQuestions)"),
-            .init(name: "category", value: "\(triviaConfig.category.id)"),
-            .init(name: "difficulty", value: "\(triviaConfig.difficulty.rawValue)"),
-            .init(name: "type", value: "\(triviaConfig.triviaType.rawValue)")
-        ]
-        let url = openTDB.createOpenTriviaDatabaseURL(endpoint: .api, queryItems: urlQueryItems)
-        
-        let unwrappedULR = try XCTUnwrap(url, "Expected a valid url to be non nil.")
-        let components = URLComponents(string: unwrappedULR.absoluteString)
-        let host = try XCTUnwrap(components?.host, "Expected url to have a host component.")
-        let path = try XCTUnwrap(components?.path, "Expected url to have a path component.")
-        let queryItems = try XCTUnwrap(components?.queryItems, "Expected url to have a query items component.")
-        
-        let expectedHost = "opentdb.com"
-        let expectedPath = "/api.php"
-        let expectedQueryCount = urlQueryItems.count
-        
-        XCTAssertEqual(host, expectedHost, "Expected host to be \(expectedHost)")
-        XCTAssertEqual(path, expectedPath, "Expected path to be \(expectedPath)")
-        XCTAssertEqual(queryItems.count, expectedQueryCount, "Expected query item count to be \(expectedQueryCount)")
-        
-        for queryItem in queryItems {
-            XCTAssertTrue(urlQueryItems.contains(queryItem), "Expected \(queryItem) to exist.")
+    func testGetQuestions() async throws {
+        let questions = try await openTDB.getQuestions()
+        XCTAssertEqual(questions.count, 10, "Expected the questions count to be 10")
+    }
+    
+    func testGetQuestionsThrowsNoResults() async throws {
+        mockOpenTriviaAPI.questionsResponseCode = .noResults
+        do {
+            _ = try await openTDB.getQuestions()
+        } catch let error as OpenTDBError {
+            XCTAssertEqual(error, .noResults, "Expected error to be no results error.")
+        } catch {
+            XCTFail("Unknown error \(error)")
         }
+    }
+    
+    func testGetQuestionsThrowsInvalidParameter() async throws {
+        mockOpenTriviaAPI.questionsResponseCode = .invalidParameter
+        do {
+            _ = try await openTDB.getQuestions()
+        } catch let error as OpenTDBError {
+            XCTAssertEqual(error, .invalidParameter, "Expected error to be invalid parameter error.")
+        } catch {
+            XCTFail("Unknown error \(error)")
+        }
+    }
+    
+    func testGetQuestionsThrowsTokenNotFound() async throws {
+        mockOpenTriviaAPI.questionsResponseCode = .tokenNotFound
+        do {
+            _ = try await openTDB.getQuestions()
+        } catch let error as OpenTDBError {
+            XCTAssertEqual(error, .noSessionToken, "Expected error to be no session token.")
+        } catch {
+            XCTFail("This isn't the expected error. \(error)")
+        }
+    }
+    
+    func testGetQuestionsThrowsTokenEmpty() async throws {
+        mockOpenTriviaAPI.questionsResponseCode = .emptyToken
+        do {
+            _ = try await openTDB.getQuestions()
+        } catch let error as OpenTDBError {
+            XCTAssertEqual(error, .emptyToken, "Expected error to be empty token.")
+        } catch {
+            XCTFail("This isn't the expected error. \(error)")
+        }
+    }
+    
+    func testResetTokenWithNoCurrentToken() async throws {
+        do {
+            try await openTDB.resetToken()
+        } catch let error as OpenTDBError {
+            XCTAssertEqual(error, .noSessionToken, "Expected the token to be empty.")
+        } catch {
+            XCTFail("This is not the expected error. \(error)")
+        }
+    }
+    
+    func testResetToken() async throws {
+        openTDB.sessionToken = "321"
+        try await openTDB.resetToken()
+        let token = try XCTUnwrap(openTDB.sessionToken, "Expected a non nil session token.")
+        XCTAssertEqual(token, "12345")
+    }
+    
+    func testRequestToken() async throws {
+        try await openTDB.requestToken()
+        let token = try XCTUnwrap(openTDB.sessionToken, "Expected a non nil session token.")
+        XCTAssertEqual(token, "12345")
     }
 }
