@@ -12,8 +12,9 @@ public struct OpenTriviaAPI: OpenTriviaAPIProtocol {
     let log = Logger(subsystem: "com.tinotusa.OpenTDB", category: "Fetcher")
     let decoder: JSONDecoder
     
-    public init(decoder: JSONDecoder = .init()) {
-        self.decoder = decoder
+    public init() {
+        decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
     }
     
     public func fetch<T: Codable>(from url: URL) async throws -> T {

@@ -16,9 +16,6 @@ public final class OpenTDB {
     
     /// The shared TriviaAPI instance.
     public static var shared = OpenTDB()
-    
-    /// Decoder for the wrapper.
-    private let decoder: JSONDecoder
     /// Logger for the class.
     private let log = Logger(subsystem: "com.tinotusa.TriviaApp", category: "TriviaAPI")
     /// The api being used.
@@ -30,8 +27,6 @@ public final class OpenTDB {
     
     /// Creates a TriviaAPI.
     public init(openTriviaAPI: OpenTriviaAPIProtocol = OpenTriviaAPI()) {
-        decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         triviaConfig = .default
         self.openTDBAPI = openTriviaAPI
     }
