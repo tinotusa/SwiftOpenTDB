@@ -43,10 +43,6 @@ public extension OpenTDB {
     func getQuestions() async throws -> [Question] {
         log.debug("Getting questions using the config settings: \(self.triviaConfig)")
         
-        if !hasSessionToken {
-            log.debug("No session token. Requesting a new one.")
-            try await requestToken()
-        }
         let questionsResponse = try await openTDBAPI.getQuestionsResponse(triviaConfig: triviaConfig, sessionToken: sessionToken)
         guard let responseCode = ResponseCode(rawValue: questionsResponse.responseCode) else {
             log.error("Failed to get questions. Unknown response code: \(questionsResponse.responseCode)")
