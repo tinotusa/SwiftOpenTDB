@@ -12,7 +12,7 @@ public struct OpenTriviaAPI: OpenTriviaAPIProtocol {
     let log = Logger(subsystem: "com.tinotusa.OpenTDB", category: "Fetcher")
     let decoder: JSONDecoder
     
-    init(decoder: JSONDecoder = .init()) {
+    public init(decoder: JSONDecoder = .init()) {
         self.decoder = decoder
     }
     

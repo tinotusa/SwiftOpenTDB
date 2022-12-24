@@ -7,7 +7,7 @@ final class OpenTDBTests: XCTestCase {
     
     override func setUpWithError() throws {
         mockOpenTriviaAPI = MockOpenTriviaAPI()
-        openTDB = .init(fetcher: mockOpenTriviaAPI)
+        openTDB = .init(openTriviaAPI: mockOpenTriviaAPI)
     }
     
     func testGetQuestions() async throws {

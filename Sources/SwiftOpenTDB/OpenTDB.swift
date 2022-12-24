@@ -24,12 +24,16 @@ public final class OpenTDB {
     /// The api being used.
     private let openTDBAPI: OpenTriviaAPIProtocol
     
+    public convenience init() {
+        self.init(openTriviaAPI: OpenTriviaAPI())
+    }
+    
     /// Creates a TriviaAPI.
-    init(fetcher: OpenTriviaAPIProtocol = OpenTriviaAPI()) {
+    public init(openTriviaAPI: OpenTriviaAPIProtocol = OpenTriviaAPI()) {
         decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         triviaConfig = .default
-        self.openTDBAPI = fetcher
+        self.openTDBAPI = openTriviaAPI
     }
 }
 
