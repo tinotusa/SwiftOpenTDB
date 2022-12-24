@@ -7,14 +7,15 @@
 
 import Foundation
 
-public enum OpenTDBError: Error {
+public enum OpenTDBError: Error, Equatable {
     case invalidURL
     case serverStatus(code: Int)
     case invalidAPIResponse(code: ResponseCode)
     case unknownError
     // api response errors
-    case noSessonToken
+    case noSessionToken
     case noResults
     case seenAllQuestions
     case invalidParameter
+    case emptyToken
 }
