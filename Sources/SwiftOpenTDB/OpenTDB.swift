@@ -21,12 +21,15 @@ public final class OpenTDB {
     private let decoder: JSONDecoder
     /// Logger for the class.
     private let log = Logger(subsystem: "com.tinotusa.TriviaApp", category: "TriviaAPI")
+    /// The api being used.
+    private let openTDBAPI: OpenTriviaAPIProtocol
     
     /// Creates a TriviaAPI.
-    private init() {
+    init(fetcher: OpenTriviaAPIProtocol = OpenTriviaAPI()) {
         decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         triviaConfig = .default
+        self.openTDBAPI = fetcher
     }
 }
 
@@ -45,35 +48,7 @@ public extension OpenTDB {
             log.debug("No session token. Requesting a new one.")
             try await requestToken()
         }
-        
-        let url = createOpenTriviaDatabaseURL(
-            endpoint: .api,
-            queryItems: [
-                .init(name: "amount", value: "\(triviaConfig.numberOfQuestions)"),
-                .init(name: "category", value: triviaConfig.category.id != 0 ? "\(triviaConfig.category.id)" : nil),
-                .init(name: "difficulty", value: triviaConfig.difficulty != .any ? triviaConfig.difficulty.rawValue : nil),
-                .init(name: "type", value: triviaConfig.triviaType != .any ? triviaConfig.triviaType.rawValue : nil),
-                .init(name: "token", value: sessionToken),
-                .init(name: "encode", value: "url3986")
-            ]
-        )
-        
-        guard let url else {
-            log.error("Failed to get questions. URL is invalid.")
-            throw OpenTDBError.invalidURL
-        }
-        
-        let request = URLRequest(url: url)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        if let response = response as? HTTPURLResponse,
-           !isSuccessfulStatusCode(response)
-        {
-            log.error("Failed to get questions. Invalid server response: \(response.statusCode)")
-            throw OpenTDBError.serverStatus(code: response.statusCode)
-        }
-        
-        let questionsResponse = try decoder.decode(QuestionsResponse.self, from: data)
+        let questionsResponse = try await openTDBAPI.getQuestionsResponse(triviaConfig: triviaConfig, sessionToken: sessionToken)
         guard let responseCode = ResponseCode(rawValue: questionsResponse.responseCode) else {
             log.error("Failed to get questions. Unknown response code: \(questionsResponse.responseCode)")
             throw OpenTDBError.unknownError
@@ -111,39 +86,7 @@ public extension OpenTDB {
             log.error("Failed to reset the token. The token is nil.")
             throw OpenTDBError.noSessonToken
         }
-        
-        log.debug("Reseting the token")
-        let url = createOpenTriviaDatabaseURL(
-            endpoint: .apiToken,
-            queryItems: [
-                .init(name: "command", value: "reset"),
-                .init(name: "token", value: self.sessionToken)
-            ]
-        )
-        guard let url else {
-            log.error("Failed to reset token. Invalid url.")
-            throw OpenTDBError.invalidURL
-        }
-        
-        let request = URLRequest(url: url)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            log.error("Failed to cast url response and http url response.")
-            throw OpenTDBError.unknownError
-        }
-        if !isSuccessfulStatusCode(httpResponse) {
-            log.error("Invalid server response status code: \(httpResponse.statusCode)")
-            throw OpenTDBError.serverStatus(code: httpResponse.statusCode)
-        }
-        
-        let tokenResponse = try decoder.decode(TokenResponse.self, from: data)
-        if !isValidAPIResponse(tokenResponse.responseCode) {
-            log.error("Failed to reset token. Got invalid server response code: \(tokenResponse.responseCode)")
-            throw OpenTDBError.invalidAPIResponse(code: ResponseCode(rawValue: tokenResponse.responseCode)!)
-        }
-        
-        log.debug("Successfully reset token.")
+        let tokenResponse = try await openTDBAPI.resetToken(currentToken: self.sessionToken)
         self.sessionToken = tokenResponse.token
     }
 
@@ -153,69 +96,7 @@ public extension OpenTDB {
     /// This token will also help indicate when the user has exhausted all questions and
     /// needs to the refreshed.
     func requestToken() async throws {
-        log.debug("Requesting token.")
-        let url = createOpenTriviaDatabaseURL(
-            endpoint: .apiToken,
-            queryItems: [.init(name: "command", value: "request")]
-        )
-        
-        guard let url else {
-            log.error("Failed to request token. URL is invalid.")
-            throw OpenTDBError.invalidURL
-        }
-        
-        let request = URLRequest(url: url)
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let response = response as? HTTPURLResponse,
-           !isSuccessfulStatusCode(response)
-        {
-            log.error("Invalid server status code: \(response.statusCode)")
-            throw OpenTDBError.serverStatus(code: response.statusCode)
-        }
-        
-        let tokenResponse = try decoder.decode(TokenResponse.self, from: data)
-        if let responseCode = ResponseCode(rawValue: tokenResponse.responseCode),
-            responseCode != .success
-        {
-            log.error("Invalid api response code: \(responseCode)")
-            throw OpenTDBError.invalidAPIResponse(code: responseCode)
-        }
-        
-        log.debug("Successfully got session token.")
+        let tokenResponse = try await openTDBAPI.requestToken()
         self.sessionToken = tokenResponse.token
-    }
-    
-    /// Creates a url for opentdb with the given path and query items.
-    /// - Parameters:
-    ///   - path: The path for the api.
-    ///   - queryItems: The query items for the api.
-    /// - Returns: A url if the path is valid, nil otherwise.
-    func createOpenTriviaDatabaseURL(endpoint: APIEndpoint, queryItems: [URLQueryItem]) -> URL? {
-        var components = URLComponents()
-        components.scheme = "https"
-        components.host = "opentdb.com"
-        components.path = endpoint.rawValue
-        components.queryItems = queryItems
-        
-        return components.url
-    }
-    
-    /// Returns whether or not the given code is valid.
-    ///
-    /// A valid code is 0.
-    ///
-    /// Everything else is not valid.
-    ///
-    /// - Parameter code: The code from the server
-    /// - Returns: True if the code is valid, false otherwise.
-    func isValidAPIResponse(_ code: Int) -> Bool {
-        code == 0
-    }
-    
-    /// Returns whether or not the given response has a successful status code.
-    /// - Parameter response: The response to check.
-    /// - Returns: True if the response's status code is valid, false otherwise.
-    func isSuccessfulStatusCode(_ response: HTTPURLResponse) -> Bool {
-        (200 ..< 300).contains(response.statusCode)
     }
 }
