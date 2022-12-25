@@ -8,26 +8,34 @@
 import Foundation
 import os
 
+/// A wrapper for opentdb.
 public struct OpenTriviaAPI: OpenTriviaAPIProtocol {
-    let log = Logger(subsystem: "com.tinotusa.OpenTDB", category: "Fetcher")
-    let decoder: JSONDecoder
+    private let log = Logger(subsystem: "com.tinotusa.SwiftOpenTDB", category: "OpenTriviaAPI")
+    private let decoder: JSONDecoder
     
+    /// Creates an instance of OpenTriviaAPI.
     public init() {
         decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
     }
     
+    /// Gets some data from the given url and decodes it.
+    /// - Parameter url: The url to get the data from.
+    /// - Returns: Some decoded data.
     public func fetch<T: Codable>(from url: URL) async throws -> T {
+        log.debug("Fetching some data from the url: \(url)")
         let request = URLRequest(url: url)
         let (data, response) = try await URLSession.shared.data(for: request)
-        
+        // TODO: look this up
         if let response = response as? HTTPURLResponse,
            !(200 ..< 300).contains(response.statusCode)
         {
             log.error("Failed to get data. Invalid server response: \(response.statusCode)")
             throw OpenTDBError.serverStatus(code: response.statusCode)
         }
-        return try decoder.decode(T.self, from: data)
+        let decodedData = try decoder.decode(T.self, from: data)
+        log.debug("Successfully got some data from the url: \(url)")
+        return decodedData
     }
     
     /// Returns whether or not the given code is valid.
@@ -49,6 +57,9 @@ public struct OpenTriviaAPI: OpenTriviaAPIProtocol {
         (200 ..< 300).contains(response.statusCode)
     }
     
+    /// Resets the given token.
+    /// - Parameter currentToken: The token to reset.
+    /// - Returns: A token response containing the new token.
     public func resetToken(currentToken: String?) async throws -> TokenResponse {
         log.debug("Reseting the token")
         let url = createOpenTriviaDatabaseURL(
@@ -119,7 +130,14 @@ public struct OpenTriviaAPI: OpenTriviaAPIProtocol {
         return components.url
     }
     
+    /// Fetches the QuestionsResponse from opentdb.
+    ///
+    /// - Parameters:
+    ///   - triviaConfig: The settings for the trivia.
+    ///   - sessionToken: The session token(if one is available).
+    /// - Returns: <#description#>
     public func getQuestionsResponse(triviaConfig: TriviaConfig, sessionToken: String? = nil) async throws -> QuestionsResponse {
+        log.debug("Fetching questions response from opentdb.")
         let url = createOpenTriviaDatabaseURL(
             endpoint: .api,
             queryItems: [
@@ -138,6 +156,7 @@ public struct OpenTriviaAPI: OpenTriviaAPIProtocol {
         }
         
         let questionsResponse: QuestionsResponse = try await fetch(from: url)
+        log.debug("Successfully got the questions response.")
         return questionsResponse
     }
 }
