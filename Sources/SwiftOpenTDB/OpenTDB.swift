@@ -52,16 +52,16 @@ public extension OpenTDB {
         switch responseCode {
         case .noResults:
             log.error("Failed to get questions. There were no results.")
-            throw OpenTDBError.noResults
+            throw TriviaAPIResponseError.noResults
         case .invalidParameter:
             log.error("Failed to get questions. A parameter was invalid.")
-            throw OpenTDBError.invalidParameter
+            throw TriviaAPIResponseError.invalidParameter
         case .tokenNotFound:
             log.debug("Failed to get questions. No token found. Will try to request for a new token.")
-            throw OpenTDBError.noSessionToken
+            throw TriviaAPIResponseError.noSessionToken
         case .tokenEmpty:
             log.debug("Token is empty.")
-            throw OpenTDBError.emptyToken
+            throw TriviaAPIResponseError.emptyToken
         default:
             log.debug("Unknown response code \(responseCode.rawValue).")
             break
@@ -75,7 +75,7 @@ public extension OpenTDB {
     func resetToken() async throws {
         if sessionToken == nil {
             log.error("Failed to reset the token. The token is nil.")
-            throw OpenTDBError.noSessionToken
+            throw TriviaAPIResponseError.noSessionToken
         }
         let tokenResponse = try await openTDBAPI.resetToken(currentToken: self.sessionToken)
         self.sessionToken = tokenResponse.token

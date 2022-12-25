@@ -19,7 +19,7 @@ final class OpenTDBTests: XCTestCase {
         mockOpenTriviaAPI.questionsResponseCode = .noResults
         do {
             _ = try await openTDB.getQuestions()
-        } catch let error as OpenTDBError {
+        } catch let error as TriviaAPIResponseError {
             XCTAssertEqual(error, .noResults, "Expected error to be no results error.")
         } catch {
             XCTFail("Unknown error \(error)")
@@ -30,7 +30,7 @@ final class OpenTDBTests: XCTestCase {
         mockOpenTriviaAPI.questionsResponseCode = .invalidParameter
         do {
             _ = try await openTDB.getQuestions()
-        } catch let error as OpenTDBError {
+        } catch let error as TriviaAPIResponseError {
             XCTAssertEqual(error, .invalidParameter, "Expected error to be invalid parameter error.")
         } catch {
             XCTFail("Unknown error \(error)")
@@ -41,7 +41,7 @@ final class OpenTDBTests: XCTestCase {
         mockOpenTriviaAPI.questionsResponseCode = .tokenNotFound
         do {
             _ = try await openTDB.getQuestions()
-        } catch let error as OpenTDBError {
+        } catch let error as TriviaAPIResponseError {
             XCTAssertEqual(error, .noSessionToken, "Expected error to be no session token.")
         } catch {
             XCTFail("This isn't the expected error. \(error)")
@@ -52,7 +52,7 @@ final class OpenTDBTests: XCTestCase {
         mockOpenTriviaAPI.questionsResponseCode = .emptyToken
         do {
             _ = try await openTDB.getQuestions()
-        } catch let error as OpenTDBError {
+        } catch let error as TriviaAPIResponseError {
             XCTAssertEqual(error, .emptyToken, "Expected error to be empty token.")
         } catch {
             XCTFail("This isn't the expected error. \(error)")
@@ -62,7 +62,7 @@ final class OpenTDBTests: XCTestCase {
     func testResetTokenWithNoCurrentToken() async throws {
         do {
             try await openTDB.resetToken()
-        } catch let error as OpenTDBError {
+        } catch let error as TriviaAPIResponseError {
             XCTAssertEqual(error, .noSessionToken, "Expected the token to be empty.")
         } catch {
             XCTFail("This is not the expected error. \(error)")

@@ -12,10 +12,4 @@ public enum OpenTDBError: Error, Equatable {
     case serverStatus(code: Int)
     case invalidAPIResponse(code: ResponseCode)
     case unknownError
-    // api response errors
-    case noSessionToken
-    case noResults
-    case seenAllQuestions
-    case invalidParameter
-    case emptyToken
 }
