@@ -42,7 +42,7 @@ final class OpenTDBTests: XCTestCase {
         do {
             _ = try await openTDB.getQuestions()
         } catch let error as TriviaAPIResponseError {
-            XCTAssertEqual(error, .noSessionToken, "Expected error to be no session token.")
+            XCTAssertEqual(error, .tokenNotFound, "Expected error to be no session token.")
         } catch {
             XCTFail("This isn't the expected error. \(error)")
         }
@@ -63,7 +63,7 @@ final class OpenTDBTests: XCTestCase {
         do {
             try await openTDB.resetToken()
         } catch let error as TriviaAPIResponseError {
-            XCTAssertEqual(error, .noSessionToken, "Expected the token to be empty.")
+            XCTAssertEqual(error, .tokenNotFound, "Expected the token to be empty.")
         } catch {
             XCTFail("This is not the expected error. \(error)")
         }
